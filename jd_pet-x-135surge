@@ -100,7 +100,7 @@ var shareCodes = [ // 这个列表填入你要助力的好友的shareCode, 最�
 
 var petInfo = null;
 var taskInfo = null;
-const name = '京东萌宠';
+const name = '东东萌宠';
 let message = '';
 let subTitle = '';
 
