@@ -127,7 +127,7 @@ function userInfo() {
                 factoryId = infoData.data.factoryList[0].factoryId;
                 productionId = infoData.data.productionList[0].productionId;
                 shareCode = infoData.data.user.encryptPin;
-                console.log("hqt_1988:",infoData.data.factoryList[0].name);
+                console.log("京喜账号:",infoData.data.factoryList[0].name);
                 console.log('当前总电量',infoData.data.user.electric);
                 console.log('当前商品所需总电量',infoData.data.productionList[0].needElectric);
                 console.log('已投入电量',infoData.data.productionList[0].investedElectric);
