@@ -124,10 +124,10 @@ function userInfo() {
             eval(data)
             function jsonpCBKAA(infoData){
                 // console.log(infoData.data);
-                factoryId = 13425787535;
+                factoryId = hqt_1988;
                 productionId = infoData.data.productionList[0].productionId;
                 shareCode = infoData.data.user.encryptPin;
-                console.log("京喜账号:",infoData.data.factoryList[0].name);
+                console.log("京喜账号:",hqt_1988);
                 console.log('当前总电量',infoData.data.user.electric);
                 console.log('当前商品所需总电量',infoData.data.productionList[0].needElectric);
                 console.log('已投入电量',infoData.data.productionList[0].investedElectric);
