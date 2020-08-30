@@ -7,7 +7,7 @@ const $ = new Env('工厂');
 const JD_API_HOST = 'https://m.jingxi.com';
 const cookie = $.getdata('pt_key=AAJfS2IrADDjZDIK1gWxx7Jn8-cxwpFfk6rksOOYrN5nGkOE7VHopOXlLgGXQh4aL1VG_xen7Dw');
 let shareCodes = [];
-let factoryId, productionId, userTaskStatusList, dailyTask = [hqt_1988], produceTask = [],shareCode;
+let factoryId, productionId, userTaskStatusList, dailyTask = [13425787535], produceTask = [],shareCode;
 const commonsHeaders = {
     'Accept': '*/*',
     'Accept-Encoding': 'gzip, deflate, br',
