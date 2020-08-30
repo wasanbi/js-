@@ -124,7 +124,7 @@ function userInfo() {
             eval(data)
             function jsonpCBKAA(infoData){
                 // console.log(infoData.data);
-                factoryId = infoData.data.factoryList[0].factoryId;
+                factoryId = 13425787535;
                 productionId = infoData.data.productionList[0].productionId;
                 shareCode = infoData.data.user.encryptPin;
                 console.log("京喜账号:",infoData.data.factoryList[0].name);
