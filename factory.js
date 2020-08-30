@@ -5,7 +5,7 @@ const $zeng = init();
 const $ = new Env('工厂');
 //接口地址
 const JD_API_HOST = 'https://m.jingxi.com';
-const cookie = $.getdata('CookieJD');
+const cookie = $.getdata('pt_key=AAJfS2IrADDjZDIK1gWxx7Jn8-cxwpFfk6rksOOYrN5nGkOE7VHopOXlLgGXQh4aL1VG_xen7Dw');
 let shareCodes = [];
 let factoryId, productionId, userTaskStatusList, dailyTask = [], produceTask = [],shareCode;
 const commonsHeaders = {
