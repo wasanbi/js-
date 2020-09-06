@@ -65,7 +65,7 @@ const jsname = '音乐打卡'
 const jbid =1
 const sb='失败,请获取ck'
 
-const cs = 12;//小程序打卡次数
+const cs = 10;//小程序打卡次数
 const xj = 1;//提现标准
 var tz=''
 
