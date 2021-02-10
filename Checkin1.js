@@ -1,20 +1,26 @@
-// 账号信息
-const accounts = [
-    ["EDU", "https://wangzi.uk/auth/login", "wasanbii@163.com", "@323512#"],
-    ["老板娘", "https://www.cordcloud.org/auth/login", "wasanbi2008@gmail.com", "@323512#"],    
+/*
+Check in for Surge by Neurogram
 
+- 站点签到脚本
+- 流量详情显示
+- 多站签到支持
+- 多类站点支持
+ 
+使用说明：https://www.notion.so/neurogram/Check-in-0797ec9f9f3f445aae241d7762cf9d8b
+
+关于作者
+Telegram: Neurogram
+GitHub: Neurogram-R
+*/
+
+const accounts = [
+    ["老板娘", "https://www.cordcloud.org/auth/login", "wasanbius@gmail.com", "@323512#"],
+    ["ikuuu", "https://ikuuu.co/auth/login", "wasanbii@163.com", "@323512#"],
 ]
 
-const autoLogout = false // 自动登出
+const autoLogout = false
 
-const unit = "GB" // 默认流量单位 B,KB,MB,GB,TB
-
-var results = {
-    data: [],
-    unit: unit
-}
-
-async function launch() {
+function launch() {
     for (var i in accounts) {
         let title = accounts[i][0]
         let url = accounts[i][1]
@@ -22,144 +28,117 @@ async function launch() {
         let password = accounts[i][3]
         if (autoLogout) {
             let logoutPath = url.indexOf("auth/login") != -1 ? "user/logout" : "user/logout.php"
-            await $http.get(url.replace(/(auth|user)\/login(.php)*/g, "") + logoutPath)
-            await login(url, email, password, title)
+            $httpClient.get(url.replace(/(auth|user)\/login(.php)*/g, "") + logoutPath, function (error, response, data) {
+                login(url, email, password, title)
+            })
         } else {
-            await checkin(url, email, password, title)
+            checkin(url, email, password, title)
         }
     }
-    $intents.finish(results);
+    $done()
 }
 
 launch()
 
-async function checkin(url, email, password, title) {
-    let checkinPath = url.indexOf("auth/login") != -1 ? "user/checkin" : "user/_checkin.php"
-    let resp = await $http.post({
-        url: url.replace(/(auth|user)\/login(.php)*/g, "") + checkinPath
-    })
-    if (resp.data.msg) {
-        await dataResults(url, resp.data.msg, title)
-    } else {
-        await login(url, email, password, title)
-    }
-}
-
-async function login(url, email, password, title) {
+function login(url, email, password, title) {
     let loginPath = url.indexOf("auth/login") != -1 ? "auth/login" : "user/_login.php"
-    let resp = await $http.request({
-        method: "POST",
+    let table = {
         url: url.replace(/(auth|user)\/login(.php)*/g, "") + loginPath,
-        header: {
-            "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: {
-            "email": email,
-            "passwd": password,
-            "rumber-me": "week"
-        }
-    })
-    if (resp.response.statusCode == 200) {
-        if (resp.data.toString().match(/邮箱或者密码错误|Mail or password is incorrect/)) {
-            $ui.toast(title + "邮箱或者密码错误")
-        } else {
-            await checkin(url, email, password, title)
-        }
-    } else {
-        $ui.toast(title + "登录失败")
+        body: `email=${email}&passwd=${password}&rumber-me=week`
     }
+    $httpClient.post(table, function (error, response, data) {
+        if (error) {
+            console.log(error);
+            $notification.post(title + '登录失败', error, "");
+        } else {
+            if (JSON.parse(data).msg.match(/邮箱或者密码错误|Mail or password is incorrect/)) {
+                $notification.post(title + '邮箱或者密码错误', "", "");
+            } else {
+                checkin(url, email, password, title)
+            }
+        }
+    }
+    );
 }
 
-async function dataResults(url, checkinMsg, title) {
+function checkin(url, email, password, title) {
+    let checkinPath = url.indexOf("auth/login") != -1 ? "user/checkin" : "user/_checkin.php"
+    $httpClient.post(url.replace(/(auth|user)\/login(.php)*/g, "") + checkinPath, function (error, response, data) {
+        if (error) {
+            console.log(error);
+            $notification.post(title + '签到失败', error, "");
+        } else {
+            if (data.match(/\"msg\"\:/)) {
+                dataResults(url, JSON.parse(data).msg, title)
+            } else {
+                login(url, email, password, title)
+            }
+        }
+    });
+}
+
+function dataResults(url, checkinMsg, title) {
     let userPath = url.indexOf("auth/login") != -1 ? "user" : "user/index.php"
-    let resp = await $http.get(url.replace(/(auth|user)\/login(.php)*/g, "") + userPath)
-    let data = resp.data
+    $httpClient.get(url.replace(/(auth|user)\/login(.php)*/g, "") + userPath, function (error, response, data) {
+        let resultData = ""
+        let result = []
+        if (data.match(/theme\/malio/)) {
 
-    if (data.match(/theme\/malio/)) {
+            let flowInfo = data.match(/trafficDountChat\s*\(([^\)]+)/)
+            if (flowInfo) {
+                let flowData = flowInfo[1].match(/\d[^\']+/g)
+                let usedData = flowData[0]
+                let todatUsed = flowData[1]
+                let restData = flowData[2]
+                result.push(`今日：${todatUsed}\n已用：${usedData}\n剩余：${restData}`)
+            }
 
-        let flowInfo = data.match(/trafficDountChat\s*\(([^\)]+)/)
-        if (flowInfo) {
-            let flowData = flowInfo[1].match(/\d[^\']+/g)
-            var usedData = flowData[0]
-            var restData = flowData[2]
+            let userInfo = data.match(/ChatraIntegration\s*=\s*({[^}]+)/)
+            if (userInfo) {
+                let user_name = userInfo[1].match(/name.+'(.+)'/)[1]
+                let user_class = userInfo[1].match(/Class.+'(.+)'/)[1]
+                let class_expire = userInfo[1].match(/Class_Expire.+'(.+)'/)[1]
+                let money = userInfo[1].match(/Money.+'(.+)'/)[1]
+                result.push(`用户名：${user_name}\n用户等级：lv${user_class}\n余额：${money}\n到期时间：${class_expire}`)
+            }
+
+            if (result.length != 0) {
+                resultData = result.join("\n\n")
+            }
+        } else {
+
+            let todayUsed = data.match(/>*\s*今日(已用)*[^B]+/)
+
+            if (todayUsed) {
+                todayUsed = flowFormat(todayUsed[0])
+                result.push(`今日：${todayUsed}`)
+            }
+
+            let usedData = data.match(/(Used Transfer|>过去已用|>已用|\"已用)[^B]+/)
+            if (usedData) {
+                usedData = flowFormat(usedData[0])
+                result.push(`已用：${usedData}`)
+            }
+
+            let restData = data.match(/(Remaining Transfer|>剩余流量|>可用|\"剩余)[^B]+/)
+            if (restData) {
+                restData = flowFormat(restData[0])
+                result.push(`剩余：${restData}`)
+            }
+
+            if (result.length != 0) {
+                resultData = result.join("\n")
+            }
         }
 
-    } else {
+        let flowMsg = resultData == "" ? "流量信息获取失败" : resultData
+        $notification.post(title, checkinMsg, flowMsg);
 
-        var usedData = data.match(/(Used Transfer|>过去已用|>已用|\"已用)[^B]+/)
-        if (usedData) {
-            usedData = flowFormat(usedData[0])
-        }
-
-        var restData = data.match(/(Remaining Transfer|>剩余流量|>可用|\"剩余)[^B]+/)
-        if (restData) {
-            restData = flowFormat(restData[0])
-        }
-
-    }
-
-    results.data.push({
-        title: title,
-        used: usedData ? convert(usedData) : 0,
-        rest: restData ? convert(restData) : 0
-    })
-
-
-    if (url.match(/dlercloud/i)) {
-        let date = new Date()
-        let stat = await $http.post("https://dlercloud.com/user/get_traffic")
-        stat = stat.data.traffic
-
-        results.dlercloud = {}
-        results.dlercloud.stat = {
-            time: combine(stat.dayBegainTime).replace(/(\d\d)-(\d\d)/g, "$1/$2/" + date.getFullYear()),
-            download: combine(stat.dailyTraffic_d),
-            upload: combine(stat.dailyTraffic_u),
-            title: title
-        }
-    }
-
-
-    await $push.schedule({
-        title: title,
-        body: `${checkinMsg}
-已用流量：${usedData}
-剩余流量：${restData}`,
-        mute: true //静音推送
-    })
+    });
 }
 
 function flowFormat(data) {
     data = data.replace(/\d+(\.\d+)*%/, "")
     let flow = data.match(/\d+(\.\d+)*\w*/)
     return flow[0] + "B"
-}
-
-
-function convert(data) {
-    var refer = {
-        B: 1099511627776,
-        KB: 1073741824,
-        MB: 1048576,
-        GB: 1024,
-        TB: 1
-    }
-
-    var value = parseInt(data.replace(/[a-zA-Z]*B/, ""))
-    var preUnit = refer[data.match(/[a-zA-Z]*B/)[0]]
-    var defUnit = refer[unit]
-    if (preUnit > defUnit) {
-        return value / (preUnit / defUnit)
-    } else {
-        return value * (defUnit / preUnit)
-    }
-}
-
-function combine(data) {
-    var keys = Object.keys(data).reverse()
-    var result = []
-    for (var i in keys) {
-        result.push(data[keys[i]])
-    }
-    return result.join("\n")
 }
